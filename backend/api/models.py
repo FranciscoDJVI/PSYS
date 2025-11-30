@@ -34,8 +34,6 @@ class Sell(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Relation with model User ForeignKey.
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     # Relation with model Product of ManyToMany.
     products = models.ManyToManyField(Product, through="SellItem", related_name="sells")
 
