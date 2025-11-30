@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import choices
 
 
 class User(AbstractUser):
@@ -27,18 +28,16 @@ class Sell(models.Model):
         CANCELED = "Canceled"
 
     # ID unique in time and space.
-    sell_id = models.UUIDField(uuid=uuid.uuid4)
-    status = models.TextChoices(
-        value=StatusChoices.choices, default=StatusChoices.PENDING
+    sell_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Relation with model User ForeignKey.
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # Relation with model Product of ManyToMany.
-    products = models.ManyToManyField(
-        Product, through="Sell_item", related_name="sells"
-    )
+    products = models.ManyToManyField(Product, through="SellItem", related_name="sells")
 
     def __str__(self) -> str:
         return str(self.sell_id)
