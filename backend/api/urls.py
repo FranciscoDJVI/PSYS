@@ -8,7 +8,7 @@ from drf_spectacular.views import (
 )
 
 router = DefaultRouter()
-router.register(r"product", ProductViewSet)
+router.register(r"products", ProductViewSet)
 router_sell_item = DefaultRouter()
 router_sell_item.register(r"sellitems", SellItemViewSet)
 router_sell = DefaultRouter()
