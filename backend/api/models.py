@@ -1,7 +1,6 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils import choices
 
 
 class User(AbstractUser):
