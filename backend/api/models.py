@@ -29,19 +29,33 @@ class Sell(models.Model):
     # ID unique in time and space.
     sell_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     status = models.CharField(
-        max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING
+        max_length=10,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PENDING
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='user'
+    )
     # Relation with model Product of ManyToMany.
-    products = models.ManyToManyField(Product, through="SellItem", related_name="sells")
+    products = models.ManyToManyField(
+        Product,
+        through="SellItem",
+        related_name="sells_items"
+    )
 
     def __str__(self) -> str:
         return str(self.sell_id)
 
 
 class SellItem(models.Model):
-    sell = models.ForeignKey(Sell, on_delete=models.CASCADE)
+    sell = models.ForeignKey(
+        Sell,
+        on_delete=models.CASCADE,
+        related_name='sells'
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 

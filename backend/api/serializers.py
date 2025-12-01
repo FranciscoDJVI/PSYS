@@ -1,15 +1,26 @@
 from rest_framework import serializers
-from api.models import Product, Sell, SellItem
+from api.models import User, Product, Sell, SellItem
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'is_staff',
+            'is_authenticated'
+        )
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ("name", "brand", "model", "sizes", "description", "price", "stock")
+        fields = ("name", "brand", "model", "sizes",
+                  "description", "price", "stock")
 
 
 class SellItemSerialiazer(serializers.ModelSerializer):
-    prodduct_name = serializers.CharField(max_length=200)
+    product_name = serializers.CharField(source='product.name')
     product_price = serializers.DecimalField(
         max_digits=10, decimal_places=2, source="product.price"
     )
@@ -17,7 +28,7 @@ class SellItemSerialiazer(serializers.ModelSerializer):
     class Meta:
         model = SellItem
         fields = (
-            "prodduct_name",
+            "product_name",
             "product_price",
             "quantity",
             "sell_subtotal",
@@ -27,17 +38,21 @@ class SellItemSerialiazer(serializers.ModelSerializer):
 class SellSerializer(serializers.ModelSerializer):
     sell_id = serializers.UUIDField(read_only=True)
     # Raltionship with SellItemSerialiazer for  many sellitems.
-    sell_items = SellItemSerialiazer(many=True, required=False)
+    sells = SellItemSerialiazer(many=True)
+    total_price = serializers.SerializerMethodField(method_name="total")
+    user = serializers.CharField(read_only=True)
 
     def total(self, obj):
-        sell_items = obj.objects.all()
-        return sum(sell_item.item_subtotal for sell_item in sell_items)
+        sell_items = obj.sells.all()
+        return sum(sell_item.sell_subtotal for sell_item in sell_items)
 
     class Meta:
         model = Sell
         fields = (
             "sell_id",
+            "user",
             "status",
             "created_at",
-            "sell_items",
+            'sells',
+            "total_price"
         )
