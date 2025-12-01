@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from api.views import ProductViewSet, SellItemViewSet
+from api.views import ProductViewSet, SellItemViewSet, SellViewSet
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -11,10 +11,14 @@ router = DefaultRouter()
 router.register(r"product", ProductViewSet)
 router_sell_item = DefaultRouter()
 router_sell_item.register(r"sellitems", SellItemViewSet)
+router_sell = DefaultRouter()
+router_sell.register(r"sells", SellViewSet)
+
 
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(router_sell_item.urls)),
+    path("", include(router_sell.urls)),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "schema/swagger-ui/",
