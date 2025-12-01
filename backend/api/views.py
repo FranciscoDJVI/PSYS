@@ -11,7 +11,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         self.permission_classes = [AllowAny]
         if self.request.method == "POST":
-            self.permission_classes = [IsAdminUser]
+            self.permission_classes = [IsAdminUser, IsAuthenticated]
         return super().get_permissions()
 
 
