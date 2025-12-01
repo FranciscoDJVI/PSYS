@@ -1,5 +1,5 @@
 import django_filters
-from api.models import Product, Sell
+from api.models import Product, Sell, SellItem
 from rest_framework import filters
 
 
@@ -7,7 +7,7 @@ class ProductFilter(django_filters.FilterSet):
     class Meta:
         model = Product
         fields = {
-            "name": ["iexact", "icontains"],
+            "name": ["exact", "contains"],
             "price": ["exact", "lt", "gt", "range"],
         }
 
@@ -22,5 +22,5 @@ class SellFilter(django_filters.FilterSet):
         model = Sell
         fields = {
             "sell_id": ['exact'],
-            "status": ['exact', 'contains'],
+            "status": ['iexact'],
         }

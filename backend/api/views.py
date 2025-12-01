@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import filters, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,13 +25,20 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
-    filter_clases = ProductFilter
-    filter_backends = [DjangoFilterBackend, InStockFilter]
+    filterset_class = ProductFilter
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+        InStockFilter,
+    ]
+
+    ordering_fields = ['name', 'price', 'stock']
 
     search_fields = ['name', 'description']
 
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 2
+    pagination_class.page_size = 1
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -59,6 +66,8 @@ class SellViewSet(viewsets.ModelViewSet):
     filter_backends = [
         DjangoFilterBackend
     ]
+
+    ordering_class = ['total_price']
 
     search_class = ['sell_id', 'status']
 
