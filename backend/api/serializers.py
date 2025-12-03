@@ -5,22 +5,26 @@ from api.models import User, Product, Sell, SellItem
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'username',
-            'is_staff',
-            'is_authenticated'
-        )
+        fields = ("username", "is_staff", "is_authenticated")
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ("name", "brand", "model", "sizes",
-                  "description", "price", "stock")
+        fields = (
+            "id",
+            "name",
+            "brand",
+            "model",
+            "sizes",
+            "description",
+            "price",
+            "stock",
+        )
 
 
 class SellItemSerialiazer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name')
+    product_name = serializers.CharField(source="product.name")
     product_price = serializers.DecimalField(
         max_digits=10, decimal_places=2, source="product.price"
     )
@@ -48,11 +52,4 @@ class SellSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sell
-        fields = (
-            "sell_id",
-            "user",
-            "status",
-            "created_at",
-            'sells',
-            "total_price"
-        )
+        fields = ("sell_id", "user", "status", "created_at", "sells", "total_price")

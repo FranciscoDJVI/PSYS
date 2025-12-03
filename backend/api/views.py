@@ -7,7 +7,7 @@ from api.serializers import (
     UserSerializer,
     ProductSerializer,
     SellItemSerialiazer,
-    SellSerializer
+    SellSerializer,
 )
 from api.filters import (
     ProductFilter,
@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.order_by('pk')
     serializer_class = ProductSerializer
 
     filterset_class = ProductFilter
@@ -33,12 +33,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         InStockFilter,
     ]
 
-    ordering_fields = ['name', 'price', 'stock']
+    ordering_fields = ["name", "price", "stock"]
 
-    search_fields = ['name', 'description']
+    search_fields = ["name", "description"]
 
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 1
+    pagination_class.page_index = 2
+    pagination_class.page_query_param = 'pagenum'
+    # size of number pages for the client
+    pagination_class.page_size_query_param = 'size'
+    pagination_class.max_page_size = 5
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -63,13 +67,11 @@ class SellViewSet(viewsets.ModelViewSet):
     serializer_class = SellSerializer
 
     filter_class = SellFilter
-    filter_backends = [
-        DjangoFilterBackend
-    ]
+    filter_backends = [DjangoFilterBackend]
 
-    ordering_class = ['total_price']
+    ordering_class = ["total_price"]
 
-    search_class = ['sell_id', 'status']
+    search_class = ["sell_id", "status"]
 
     pagination_class = PageNumberPagination
     pagination_class.page_size = 2
