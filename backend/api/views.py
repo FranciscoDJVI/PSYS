@@ -1,4 +1,4 @@
-from rest_framework import filters, viewsets
+from rest_framework import filters, generics, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.order_by('pk')
+    queryset = Product.objects.order_by("pk")
     serializer_class = ProductSerializer
 
     filterset_class = ProductFilter
@@ -39,16 +39,23 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     pagination_class = PageNumberPagination
     pagination_class.page_index = 2
-    pagination_class.page_query_param = 'pagenum'
+
+    pagination_class.page_query_param = "pagenum"
     # size of number pages for the client
-    pagination_class.page_size_query_param = 'size'
-    pagination_class.max_page_size = 5
+    pagination_class.page_size_query_param = "size"
+    pagination_class.max_page_size = 10
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
         if self.request.method == "POST":
             self.permission_classes = [IsAdminUser, IsAuthenticated]
         return super().get_permissions()
+
+
+# viewsets for obtain all products for request of client.
+# withuot pagination
+class ProductAllAPIView(ProductViewSet):
+    pagination_class = None
 
 
 class SellItemViewSet(viewsets.ModelViewSet):
@@ -72,7 +79,6 @@ class SellViewSet(viewsets.ModelViewSet):
     ordering_class = ["total_price"]
 
     search_class = ["sell_id", "status"]
-
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
