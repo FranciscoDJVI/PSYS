@@ -26,24 +26,26 @@ class Sell(models.Model):
         CONFIRMED = "Confirmed"
         CANCELED = "Canceled"
 
+    class TypePayChoice(models.TextChoices):
+        CREDITO = "Tarjeta credito"
+        DEBITO = "Tarjeta debito"
+        EFECTIVO = "Efectivo"
+        TRANSFERENCIA = "Transferencia"
+
     # ID unique in time and space.
     sell_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     status = models.CharField(
-        max_length=10,
-        choices=StatusChoices.choices,
-        default=StatusChoices.PENDING
+        max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='user'
+    type_pay = models.CharField(
+        max_length=15, choices=TypePayChoice.choices, default=TypePayChoice.EFECTIVO
     )
+
+    created_at = models.DateField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.
     products = models.ManyToManyField(
-        Product,
-        through="SellItem",
-        related_name="sells_items"
+        Product, through="SellItem", related_name="sells_items"
     )
 
     def __str__(self) -> str:
@@ -51,17 +53,14 @@ class Sell(models.Model):
 
 
 class SellItem(models.Model):
-    sell = models.ForeignKey(
-        Sell,
-        on_delete=models.CASCADE,
-        related_name='sells'
-    )
+    sell = models.ForeignKey(Sell, on_delete=models.CASCADE, related_name="sells")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
     @property
     def sell_subtotal(self):
-        return self.product.price * self.quantity
+        self.total = float(self.product.price * self.quantity)
+        return self.total
 
     def __str__(self):
         return f"{self.sell} {self.product}"

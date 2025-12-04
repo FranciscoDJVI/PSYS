@@ -73,8 +73,6 @@ class SellViewSet(viewsets.ModelViewSet):
 
     search_class = ["sell_id", "status"]
 
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 2
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]

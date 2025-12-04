@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from api.models import User, Product, Sell, SellItem
+from datetime import datetime
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -52,4 +53,12 @@ class SellSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sell
-        fields = ("sell_id", "user", "status", "created_at", "sells", "total_price")
+        fields = (
+            "sell_id",
+            "user",
+            "status",
+            "created_at",
+            "sells",
+            "total_price",
+            "type_pay",
+        )
