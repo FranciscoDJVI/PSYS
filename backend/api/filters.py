@@ -21,6 +21,5 @@ class SellFilter(django_filters.FilterSet):
     class Meta:
         model = Sell
         fields = {
-            "sell_id": ['exact'],
-            "status": ['iexact'],
+            "sell_id": ["exact"],
         }

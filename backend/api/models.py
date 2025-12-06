@@ -34,9 +34,6 @@ class Sell(models.Model):
 
     # ID unique in time and space.
     sell_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    status = models.CharField(
-        max_length=10, choices=StatusChoices.choices, default=StatusChoices.PENDING
-    )
     type_pay = models.CharField(
         max_length=15, choices=TypePayChoice.choices, default=TypePayChoice.EFECTIVO
     )

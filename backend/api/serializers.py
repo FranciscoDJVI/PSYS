@@ -56,7 +56,6 @@ class SellSerializer(serializers.ModelSerializer):
         fields = (
             "sell_id",
             "user",
-            "status",
             "created_at",
             "sells",
             "total_price",
