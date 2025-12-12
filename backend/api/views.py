@@ -85,3 +85,6 @@ class SellViewSet(viewsets.ModelViewSet):
         if self.request.method == "POST":
             self.permission_classes = [IsAdminUser, IsAuthenticated]
         return super().get_permissions()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
