@@ -2,6 +2,7 @@ from rest_framework import filters, generics, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Sum, F
 from api.models import Product, SellItem, Sell, User
 from api.serializers import (
     UserSerializer,
@@ -53,7 +54,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 # viewsets for obtain all products for request of client.
-# withuot pagination
+# without pagination
 class ProductAllAPIView(ProductViewSet):
     pagination_class = None
 
@@ -88,3 +89,11 @@ class SellViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    # Override list method to include total sales amount
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        total_sales = SellItem.objects.aggregate(
+            total=Sum(F('product__price') * F('quantity')))['total'] or 0
+        response.data['total_sales'] = total_sales
+        return response
