@@ -16,6 +16,14 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
 
+    def decrease_stock(self, quantity):
+        if self.stock < quantity:
+            raise ValueError(
+                f"Stock insuficiente para {self.name}: disponible {self.stock}, solicitado {quantity}"
+            )
+        self.stock -= quantity
+        self.save()
+
     def __str__(self) -> str:
         return str(self.name)
 
@@ -39,8 +47,7 @@ class Sell(models.Model):
     )
 
     created_at = models.DateField(auto_now_add=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="user")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.
     products = models.ManyToManyField(
         Product, through="SellItem", related_name="sells_items"
@@ -51,8 +58,7 @@ class Sell(models.Model):
 
 
 class SellItem(models.Model):
-    sell = models.ForeignKey(
-        Sell, on_delete=models.CASCADE, related_name="sells")
+    sell = models.ForeignKey(Sell, on_delete=models.CASCADE, related_name="sells")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
