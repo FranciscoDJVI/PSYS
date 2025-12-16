@@ -48,10 +48,10 @@ class SellSerializer(serializers.ModelSerializer):
     user = serializers.CharField(source="user.username", read_only=True)
 
     @transaction.atomic
-    def create(self, validated_data):
-        sells_data = validated_data.pop("sells")
+    def create(self, data):
+        sells_data = data.pop("sells")
 
-        # Validar stock ANTES de crear cualquier cosa
+        # Validate
         for sell_item_data in sells_data:
             product = sell_item_data["product"]
             quantity = sell_item_data["quantity"]
@@ -60,14 +60,14 @@ class SellSerializer(serializers.ModelSerializer):
                     f"Stock insuficiente para {product.name}: disponible {product.stock}, solicitado {quantity}"
                 )
 
-        # Crear Sell solo después de validación
-        sell = Sell.objects.create(**validated_data)
+        # Create after validation
+        sell = Sell.objects.create(**data)
 
-        # Crear SellItems
+        # Create SellItems
         for sell_item_data in sells_data:
             SellItem.objects.create(sell=sell, **sell_item_data)
 
-        # Disminuir stock al final
+        # Decrease stock
         for sell_item_data in sells_data:
             product = sell_item_data["product"]
             quantity = sell_item_data["quantity"]
