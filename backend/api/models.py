@@ -39,7 +39,8 @@ class Sell(models.Model):
     )
 
     created_at = models.DateField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.
     products = models.ManyToManyField(
         Product, through="SellItem", related_name="sells_items"
@@ -50,7 +51,8 @@ class Sell(models.Model):
 
 
 class SellItem(models.Model):
-    sell = models.ForeignKey(Sell, on_delete=models.CASCADE, related_name="sells")
+    sell = models.ForeignKey(
+        Sell, on_delete=models.CASCADE, related_name="sells")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 

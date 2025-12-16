@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from api.models import User, Product, Sell, SellItem
-from datetime import datetime
 
 
 class UserSerializer(serializers.ModelSerializer):
