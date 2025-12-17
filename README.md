@@ -167,4 +167,4 @@ Para preguntas o soporte, abre un issue en el repositorio o contacta al mantened
 
 ---
 
-Desarrollado usnado Django y DRF.
+Desarrollado usando Django y DRF.
