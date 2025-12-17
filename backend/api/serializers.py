@@ -8,9 +8,9 @@ from rest_framework import serializers
 from api.models import User, Product, Sell, SellItem
 from .utils import validate_stock_availability, validate_payment_type
 from .exceptions import InsufficientStockError, InvalidPaymentTypeError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 logger = logging.getLogger(__name__)
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,7 +19,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
+        fields = ("username", "is_staff", "password",
+                  "is_authenticated", "roles")
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
@@ -108,7 +109,8 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
-            raise serializers.ValidationError("Error interno al crear la venta.")
+            raise serializers.ValidationError(
+                "Error interno al crear la venta.")
 
     def total(self, obj) -> float:
         """
@@ -158,7 +160,8 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {"username": self.user.username, "email": self.user.email}
+        data["user_data"] = {
+            "username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 
