@@ -6,7 +6,7 @@ from api.views import (
     SellItemViewSet,
     SellViewSet,
     ProductAllAPIView,
-    CustomLoginView,
+    CustomLoginView
 )
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -34,7 +34,6 @@ urlpatterns = [
     path("", include(router_sell_item.urls)),
     path("", include(router_sell.urls)),
     path("", include(router_user.urls)),
-
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("auth/token/", CustomLoginView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

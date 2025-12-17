@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: psys
+Version: 0.1.0
+Summary: Simple api of e-commerce.
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: django>=5.2.8
+Requires-Dist: django-cors-headers>=4.9.0
+Requires-Dist: django-filter>=25.2
+Requires-Dist: djangorestframework>=3.16.1
+Requires-Dist: djangorestframework-simplejwt>=5.5.1
+Requires-Dist: drf-spectacular>=0.29.0
+Requires-Dist: python-dotenv>=1.2.1
