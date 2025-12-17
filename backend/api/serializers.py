@@ -1,12 +1,25 @@
 from django.db import transaction
 from rest_framework import serializers
 from api.models import User, Product, Sell, SellItem
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ("username", "is_staff", "is_authenticated")
+        fields = (
+            "username",
+            "is_staff",
+            "password",
+            "is_authenticated",
+            "roles"
+        )
+
+    def get_roles(self, obj):
+        return [group.name for group in obj.groups.all()]
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -89,3 +102,17 @@ class SellSerializer(serializers.ModelSerializer):
             "total_price",
             "type_pay",
         )
+
+
+class CustomObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        data['user_data'] = {
+            'username': self.user.username,
+            'email': self.user.email
+        }
+
+        data['roles'] = [group.name for group in self.user.groups.all()]
+
+        return data

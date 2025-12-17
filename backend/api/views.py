@@ -1,10 +1,12 @@
 from rest_framework import filters, generics, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, F
 from api.models import Product, SellItem, Sell, User
 from api.serializers import (
+    CustomObtainPairSerializer,
     UserSerializer,
     ProductSerializer,
     SellItemSerialiazer,
@@ -97,3 +99,7 @@ class SellViewSet(viewsets.ModelViewSet):
             total=Sum(F('product__price') * F('quantity')))['total'] or 0
         response.data['total_sales'] = total_sales
         return response
+
+
+class CustomLoginView(TokenObtainPairView):
+    serializer_class = CustomObtainPairSerializer
