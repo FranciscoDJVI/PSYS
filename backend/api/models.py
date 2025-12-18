@@ -34,7 +34,6 @@ class Product(models.Model):
     # Decrease stock in bulk for multiple products. for more efficiency.
     @staticmethod
     def bulk_decrease_stock(sell_items_data):
-        """Decrementa stock en bulk para múltiples productos."""
         for product, quantity in [
             (item["product"], item["quantity"]) for item in sell_items_data
         ]:
