@@ -108,7 +108,7 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     ViewSet for Sell model with custom permissions and total sales.
     """
 
-    queryset = Sell.objects.all()
+    queryset = Sell.objects.prefetch_related('sells__product')
     serializer_class = SellSerializer
 
     filterset_class = SellFilter

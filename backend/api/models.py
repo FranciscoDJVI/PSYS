@@ -11,7 +11,7 @@ class User(AbstractUser):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, db_index=True)
     brand = models.CharField(max_length=200)
     model = models.CharField(max_length=200)
     sizes = models.CharField(max_length=200)
@@ -58,7 +58,7 @@ class Sell(models.Model):
         max_length=15, choices=TypePayChoice.choices, default=TypePayChoice.EFECTIVO
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.

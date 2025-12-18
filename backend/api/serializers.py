@@ -4,6 +4,7 @@ Serializers for the e-commerce API.
 
 import logging
 from django.db import transaction
+from django.db.models import Sum, F
 from rest_framework import serializers
 from api.models import User, Product, Sell, SellItem
 from .utils import validate_stock_availability, validate_payment_type
@@ -19,7 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
+        fields = ("username", "is_staff", "password",
+                  "is_authenticated", "roles")
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
@@ -80,6 +82,8 @@ class SellSerializer(serializers.ModelSerializer):
 
     sell_id = serializers.UUIDField(read_only=True)
     sells = SellItemSerializer(many=True)
+    created_at = serializers.DateTimeField(
+        format='%Y-%m-%d %H:%M', read_only=True)
     total_price = serializers.SerializerMethodField(method_name="total")
     user = serializers.CharField(source="user.username", read_only=True)
 
@@ -122,7 +126,8 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
-            raise serializers.ValidationError("Error interno al crear la venta.")
+            raise serializers.ValidationError(
+                "Error interno al crear la venta.")
 
     def total(self, obj) -> float:
         """
@@ -134,8 +139,9 @@ class SellSerializer(serializers.ModelSerializer):
         Returns:
             float: Total price.
         """
-        sell_items = obj.sells.all()
-        return sum(sell_item.sell_subtotal for sell_item in sell_items)
+        sell_items = obj.sells.aggregate(
+            total=Sum(F('quantity') * F('product__price')))['total'] or 0.
+        return sell_items
 
     class Meta:
         model = Sell
@@ -172,7 +178,8 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {"username": self.user.username, "email": self.user.email}
+        data["user_data"] = {
+            "username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 
