@@ -2,15 +2,7 @@
 Views for the e-commerce API.
 """
 
-import logging
-from rest_framework import filters, viewsets
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework_simplejwt.views import TokenObtainPairView
-from django_filters.rest_framework import DjangoFilterBackend
-from django.http import Http404
-from django.db.models import Sum, F
+
 from api.exceptions import ProductNotFoundError
 from api.models import Product, SellItem, Sell, User
 from api.serializers import (
@@ -25,8 +17,18 @@ from api.filters import (
     InStockFilter,
     SellFilter,
 )
+from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
+from django.db.models import Sum, F
+from rest_framework import filters, viewsets
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView
 from . import mixins
 from functools import lru_cache
+import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +150,7 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
         except Exception as e:
             logger.error(f"Unexpected error in sell creation: {e}")
             return Response(
-                {"error": "Inteernal error to created sale."},
+                {"error": "Internal error to created sale."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
