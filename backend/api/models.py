@@ -18,6 +18,9 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
 
+    class Meta:
+        unique_together = ("name", "brand", "model")
+
     def decrease_stock(self, quantity):
         if self.stock < quantity:
             raise ValueError(
