@@ -19,8 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password",
-                  "is_authenticated", "roles")
+        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
@@ -84,33 +83,37 @@ class SellSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField(method_name="total")
     user = serializers.CharField(source="user.username", read_only=True)
 
+    def _validate_sell_data(self, sells_data, payment_type):
+        validate_payment_type(payment_type)
+        for sell_item_data in sells_data:
+            product = sell_item_data["product"]
+            quantity = sell_item_data["quantity"]
+            validate_stock_availability(product, quantity)
+
+    def _create_sell_and_items(self, data, sells_data):
+        """Crea Sell y SellItems."""
+        sell = Sell.objects.create(**data)
+        for sell_item_data in sells_data:
+            SellItem.objects.create(sell=sell, **sell_item_data)
+        return sell
+
+    def _update_stock(self, sells_data):
+        """Decrementa stock de productos usando método bulk del modelo."""
+        Product.bulk_decrease_stock(sells_data)
+
     @transaction.atomic
     def create(self, data):
         """
-        Create a Sell with nested SellItems, validating stock and payment type.
+        Crea una Sell con validaciones y transacción.
         """
         try:
             sells_data = data.pop("sells")
             payment_type = data.get("type_pay")
 
-            # Validate payment type
-            validate_payment_type(payment_type)
+            self._validate_sell_data(sells_data, payment_type)
 
-            # Validate stock for all items
-            for sell_item_data in sells_data:
-                product = sell_item_data["product"]
-                quantity = sell_item_data["quantity"]
-                validate_stock_availability(product, quantity)
-
-            # Create Sell
-            sell = Sell.objects.create(**data)
-
-            # Create SellItems and decrease stock
-            for sell_item_data in sells_data:
-                SellItem.objects.create(sell=sell, **sell_item_data)
-                product = sell_item_data["product"]
-                quantity = sell_item_data["quantity"]
-                product.decrease_stock(quantity)
+            sell = self._create_sell_and_items(data, sells_data)
+            self._update_stock(sells_data)
 
             logger.info(f"Sell created successfully: {sell.sell_id}")
             return sell
@@ -119,8 +122,7 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
-            raise serializers.ValidationError(
-                "Error interno al crear la venta.")
+            raise serializers.ValidationError("Error interno al crear la venta.")
 
     def total(self, obj) -> float:
         """
@@ -170,8 +172,7 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {
-            "username": self.user.username, "email": self.user.email}
+        data["user_data"] = {"username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 

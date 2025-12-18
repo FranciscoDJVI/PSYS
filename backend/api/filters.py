@@ -15,8 +15,8 @@ class ProductFilter(django_filters.FilterSet):
 
 class InStockFilter(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        in_stock = request.query_params.get('in_stock', None)
-        if in_stock == 'true':
+        in_stock = request.query_params.get("in_stock", None)
+        if in_stock == "true":
             return queryset.filter(stock__gt=0)
         return queryset
 
@@ -26,4 +26,7 @@ class SellFilter(django_filters.FilterSet):
         model = Sell
         fields = {
             "sell_id": ["exact"],
+            "user": ["exact"],
+            "type_pay": ["exact", "icontains"],
+            "created_at": ["exact", "range", "lt", "gt"],
         }

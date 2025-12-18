@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db.models import F
 from django.contrib.auth.models import AbstractUser
 
 
@@ -21,6 +22,7 @@ class Product(models.Model):
     class Meta:
         unique_together = ("name", "brand", "model")
 
+    # Decrease stock in a single product.
     def decrease_stock(self, quantity):
         if self.stock < quantity:
             raise ValueError(
@@ -29,16 +31,21 @@ class Product(models.Model):
         self.stock -= quantity
         self.save()
 
+    # Decrease stock in bulk for multiple products. for more efficiency.
+    @staticmethod
+    def bulk_decrease_stock(sell_items_data):
+        """Decrementa stock en bulk para múltiples productos."""
+        for item_data in sell_items_data:
+            product = item_data["product"]
+            quantity = item_data["quantity"]
+            product.stock = F("stock") - quantity
+            product.save(update_fields=["stock"])
+
     def __str__(self) -> str:
         return str(self.name)
 
 
 class Sell(models.Model):
-    class StatusChoices(models.TextChoices):
-        PENDING = "Pending"
-        CONFIRMED = "Confirmed"
-        CANCELED = "Canceled"
-
     class TypePayChoice(models.TextChoices):
         CREDITO = "Tarjeta credito"
         DEBITO = "Tarjeta debito"
@@ -51,7 +58,7 @@ class Sell(models.Model):
         max_length=15, choices=TypePayChoice.choices, default=TypePayChoice.EFECTIVO
     )
 
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.
@@ -71,8 +78,7 @@ class SellItem(models.Model):
 
     @property
     def sell_subtotal(self):
-        self.total = float(self.product.price * self.quantity)
-        return self.total
+        return float(self.product.price * self.quantity)
 
     def __str__(self):
         return f"{self.sell} {self.product}"

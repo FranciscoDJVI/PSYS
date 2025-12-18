@@ -27,6 +27,7 @@ from api.filters import (
     SellFilter,
 )
 from .exceptions import ProductNotFoundError
+from . import mixins
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
     """
     ViewSet for Product model with filters and search.
     """
@@ -64,15 +65,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     pagination_class.page_query_param = "pagenum"
     pagination_class.page_size_query_param = "size"
     pagination_class.max_page_size = 10
-
-    def get_permissions(self):
-        """
-        Set permissions based on request method.
-        """
-        self.permission_classes = [AllowAny]
-        if self.request.method in ["POST", "PUT", "PATCH", "DELETE"]:
-            self.permission_classes = [IsAdminUser, IsAuthenticated]
-        return super().get_permissions()
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -102,7 +94,7 @@ class ProductAllAPIView(ProductViewSet):
     pagination_class = None
 
 
-class SellItemViewSet(viewsets.ModelViewSet):
+class SellItemViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
     """
     ViewSet for SellItem model.
     """
@@ -110,17 +102,8 @@ class SellItemViewSet(viewsets.ModelViewSet):
     queryset = SellItem.objects.all()
     serializer_class = SellItemSerializer
 
-    def get_permissions(self):
-        """
-        Set permissions based on request method.
-        """
-        self.permission_classes = [AllowAny]
-        if self.request.method in ["POST", "PUT", "PATCH", "DELETE"]:
-            self.permission_classes = [IsAdminUser, IsAuthenticated]
-        return super().get_permissions()
 
-
-class SellViewSet(viewsets.ModelViewSet):
+class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     """
     ViewSet for Sell model with custom permissions and total sales.
     """
@@ -131,14 +114,8 @@ class SellViewSet(viewsets.ModelViewSet):
     filterset_class = SellFilter
     filter_backends = [DjangoFilterBackend]
 
-    def get_permissions(self):
-        """
-        Set permissions based on request method.
-        """
-        self.permission_classes = [AllowAny]
-        if self.request.method == "POST":
-            self.permission_classes = [IsAuthenticated]
-        return super().get_permissions()
+    search_fields = ["sell_id"]
+    ordering_fields = ["created_at", "type_pay"]
 
     def perform_create(self, serializer):
         """
@@ -170,8 +147,10 @@ class SellViewSet(viewsets.ModelViewSet):
         """
         try:
             response = super().list(request, *args, **kwargs)
+            # Get the filtered queryset
+            queryset = self.filter_queryset(self.get_queryset())
             total_sales = (
-                SellItem.objects.aggregate(
+                SellItem.objects.filter(sell__in=queryset).aggregate(
                     total=Sum(F("product__price") * F("quantity"))
                 )["total"]
                 or 0
