@@ -44,6 +44,16 @@ class ProductSerializer(serializers.ModelSerializer):
             "stock",
         )
 
+    def validate(self, data):
+        name = data.get("name")
+        brand = data.get("brand")
+        model = data.get("model")
+        if Product.objects.filter(name=name, brand=brand, model=model).exists():
+            raise serializers.ValidationError(
+                "A product with the same name, brand, and model already exists."
+            )
+        return data
+
 
 class SellItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
