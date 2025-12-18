@@ -20,8 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password",
-                  "is_authenticated", "roles")
+        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
@@ -49,7 +48,10 @@ class ProductSerializer(serializers.ModelSerializer):
         name = data.get("name")
         brand = data.get("brand")
         model = data.get("model")
-        if Product.objects.filter(name=name, brand=brand, model=model).exists():
+        queryset = Product.objects.filter(name=name, brand=brand, model=model)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
             raise serializers.ValidationError(
                 "A product with the same name, brand, and model already exists."
             )
@@ -82,8 +84,7 @@ class SellSerializer(serializers.ModelSerializer):
 
     sell_id = serializers.UUIDField(read_only=True)
     sells = SellItemSerializer(many=True)
-    created_at = serializers.DateTimeField(
-        format='%Y-%m-%d %H:%M', read_only=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M", read_only=True)
     total_price = serializers.SerializerMethodField(method_name="total")
     user = serializers.CharField(source="user.username", read_only=True)
 
@@ -126,21 +127,20 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
-            raise serializers.ValidationError(
-                "Error interno al crear la venta.")
+            raise serializers.ValidationError("Error interno al crear la venta.")
 
     def total(self, obj) -> float:
-        """
-        Calculate total price for the sell.
+        """Calculate total price for the sell.
 
         Args:
             obj: Sell instance.
 
         Returns:
-            float: Total price.
-        """
-        sell_items = obj.sells.aggregate(
-            total=Sum(F('quantity') * F('product__price')))['total'] or 0.
+            float: Total price."""
+        sell_items = (
+            obj.sells.aggregate(total=Sum(F("quantity") * F("product__price")))["total"]
+            or 0.0
+        )
         return sell_items
 
     class Meta:
@@ -178,8 +178,7 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {
-            "username": self.user.username, "email": self.user.email}
+        data["user_data"] = {"username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 

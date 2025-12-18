@@ -3,8 +3,7 @@ Views for the e-commerce API.
 """
 
 import logging
-from rest_framework import filters, generics, viewsets, serializers
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework import filters, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,18 +25,18 @@ from api.filters import (
     InStockFilter,
     SellFilter,
 )
-from .exceptions import ProductNotFoundError
 from . import mixins
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet, mixins.AdminOnlyMixin):
     """
     ViewSet for User model.
     """
 
-    queryset = User.objects.all()
+    queryset = User.objects.prefetch_related("groups").select_related()
     serializer_class = UserSerializer
 
 
@@ -46,7 +45,7 @@ class ProductViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
     ViewSet for Product model with filters and search.
     """
 
-    queryset = Product.objects.order_by("pk")
+    queryset = Product.objects.prefetch_related().all().order_by("name")
     serializer_class = ProductSerializer
 
     filterset_class = ProductFilter
@@ -75,13 +74,20 @@ class ProductViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
             return super().retrieve(request, *args, **kwargs)
         except Http404:
             logger.warning(f"Product not found: {kwargs.get('pk')}")
+
             raise ProductNotFoundError(product_id=kwargs.get("pk"))
+
         except Exception as e:
             logger.error(f"Error retrieving product: {e}")
+
             return Response(
-                {"error": "Error interno."},
+                {"error": "Internal error."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @lru_cache(maxsize=128)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 # viewsets for obtain all products for request of client.
@@ -108,7 +114,9 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     ViewSet for Sell model with custom permissions and total sales.
     """
 
-    queryset = Sell.objects.prefetch_related('sells__product')
+    queryset = Sell.objects.prefetch_related("sells__product").annotate(
+        total_price=Sum(F("sells__quantity") * F("sells__product__price"))
+    )
     serializer_class = SellSerializer
 
     filterset_class = SellFilter
@@ -116,6 +124,9 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
 
     search_fields = ["sell_id"]
     ordering_fields = ["created_at", "type_pay"]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
 
     def perform_create(self, serializer):
         """
@@ -137,7 +148,7 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
         except Exception as e:
             logger.error(f"Unexpected error in sell creation: {e}")
             return Response(
-                {"error": "Error interno al crear venta."},
+                {"error": "Inteernal error to created sale."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -160,7 +171,7 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
         except Exception as e:
             logger.error(f"Error listing sells: {e}")
             return Response(
-                {"error": "Error interno al listar ventas."},
+                {"error": "Internal error to list sales."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

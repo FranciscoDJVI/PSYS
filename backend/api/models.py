@@ -35,9 +35,9 @@ class Product(models.Model):
     @staticmethod
     def bulk_decrease_stock(sell_items_data):
         """Decrementa stock en bulk para múltiples productos."""
-        for item_data in sell_items_data:
-            product = item_data["product"]
-            quantity = item_data["quantity"]
+        for product, quantity in [
+            (item["product"], item["quantity"]) for item in sell_items_data
+        ]:
             product.stock = F("stock") - quantity
             product.save(update_fields=["stock"])
 
@@ -59,11 +59,10 @@ class Sell(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="user")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     # Relation with model Product of ManyToMany.
     products = models.ManyToManyField(
-        Product, through="SellItem", related_name="sells_items"
+        Product, through="SellItem", related_name="sell_items"
     )
 
     def __str__(self) -> str:
@@ -71,8 +70,7 @@ class Sell(models.Model):
 
 
 class SellItem(models.Model):
-    sell = models.ForeignKey(
-        Sell, on_delete=models.CASCADE, related_name="sells")
+    sell = models.ForeignKey(Sell, on_delete=models.CASCADE, related_name="sells")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
