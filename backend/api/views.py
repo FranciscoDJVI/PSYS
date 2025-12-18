@@ -10,7 +10,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
 from django.db.models import Sum, F
+from api.exceptions import ProductNotFoundError
 from api.models import Product, SellItem, Sell, User
 from api.serializers import (
     CustomObtainPairSerializer,
@@ -76,13 +78,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         """
         Retrieve a product with error handling.
         """
+
         try:
             return super().retrieve(request, *args, **kwargs)
-        except Product.DoesNotExist:
+        except Http404:
             logger.warning(f"Product not found: {kwargs.get('pk')}")
-            return Response(
-                {"error": "Producto no encontrado."}, status=status.HTTP_404_NOT_FOUND
-            )
+            raise ProductNotFoundError(product_id=kwargs.get("pk"))
         except Exception as e:
             logger.error(f"Error retrieving product: {e}")
             return Response(

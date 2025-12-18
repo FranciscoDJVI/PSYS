@@ -3,7 +3,8 @@ Constants used across the API.
 """
 
 # Payment types
-PAYMENT_TYPES = ["Efectivo", "Tarjeta credito", "Tarjeta debito", "Transferencia"]
+PAYMENT_TYPES = ["Efectivo", "Tarjeta credito",
+                 "Tarjeta debito", "Transferencia"]
 
 # Default pagination
 DEFAULT_PAGE_SIZE = 5
