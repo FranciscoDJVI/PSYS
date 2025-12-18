@@ -17,6 +17,7 @@ from api.filters import (
     InStockFilter,
     SellFilter,
 )
+from api.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from django.db.models import Sum, F
@@ -62,10 +63,10 @@ class ProductViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
     search_fields = ["name", "description"]
 
     pagination_class = PageNumberPagination
-    pagination_class.page_size = 5
+    pagination_class.page_size = DEFAULT_PAGE_SIZE
     pagination_class.page_query_param = "pagenum"
     pagination_class.page_size_query_param = "size"
-    pagination_class.max_page_size = 10
+    pagination_class.max_page_size = MAX_PAGE_SIZE
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -128,7 +129,10 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     ordering_fields = ["created_at", "type_pay"]
 
     def get_queryset(self):
-        return super().get_queryset().filter(user=self.request.user)
+        qs = super().get_queryset()
+        if self.request.user.is_authenticated:
+            qs = qs.filter(user=self.request.user)
+        return qs
 
     def perform_create(self, serializer):
         """

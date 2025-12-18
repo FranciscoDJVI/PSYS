@@ -26,7 +26,7 @@ class Product(models.Model):
     def decrease_stock(self, quantity):
         if self.stock < quantity:
             raise ValueError(
-                f"Insuficient stock for sell {self.name}: disponible {self.stock}, requested {quantity}"
+                f"Insuficient stock for {self.name}: disponible {self.stock}, requested {quantity}"
             )
         self.stock -= quantity
         self.save()

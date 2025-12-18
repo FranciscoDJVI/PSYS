@@ -7,12 +7,12 @@ from rest_framework.exceptions import APIException, ValidationError, NotFound, A
 class InsufficientStockError(ValidationError):
     """Raised when product stock is insufficient for a sale."""
 
-    def __init__(self, product_id, requested_quantity, available_quantity):
-        self.product_id = product_id
+    def __init__(self, product_name, requested_quantity, available_quantity):
+        self.product_name = product_name
         self.requested_quantity = requested_quantity
         self.available_quantity = available_quantity
         super().__init__(
-            detail=f"Insuficient stock for product {product_id}: requested {requested_quantity}, available {available_quantity}.",
+            detail=f"Insuficient stock for product {product_name}: requested {requested_quantity}, available {available_quantity}.",
             code='insufficient_stock')
 
 

@@ -3,8 +3,12 @@ Constants used across the API.
 """
 
 # Payment types
-PAYMENT_TYPES = ["Efectivo", "Tarjeta credito",
-                 "Tarjeta debito", "Transferencia"]
+PAYMENT_TYPES = [
+    "Efectivo",
+    "Tarjeta credito",
+    "Tarjeta debito",
+    "Transferencia"
+]
 
 # Default pagination
 DEFAULT_PAGE_SIZE = 5
@@ -14,5 +18,5 @@ MAX_PAGE_SIZE = 10
 MAX_STOCK_QUANTITY = 10000
 
 # Error messages
-INSUFFICIENT_STOCK_MSG = "Stock insuficiente para {product_name}: disponible {available}, solicitado {requested}"
-INVALID_PAYMENT_TYPE_MSG = "Tipo de pago inválido. Debe ser uno de: {valid_types}"
+INSUFFICIENT_STOCK_MSG = "Insuficient stock for {product_name}: disponible {available}, requested {requested}"
+INVALID_PAYMENT_TYPE_MSG = "Invalid type payment. Must be one of: {valid_types}"

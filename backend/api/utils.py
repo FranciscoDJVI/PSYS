@@ -13,9 +13,9 @@ def validate_stock_availability(product, quantity: int) -> None:
 
     if product.stock < quantity:
         raise InsufficientStockError(
-            product_id=product.id,
+            product_name=product.name,
             requested_quantity=quantity,
-            available_quantity=product.stock
+            available_quantity=product.stock,
         )
 
 

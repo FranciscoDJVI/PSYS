@@ -1,7 +1,9 @@
 """
 Serializers for the e-commerce API.
 """
+from api.constants import INSUFFICIENT_STOCK_MSG, INVALID_PAYMENT_TYPE_MSG
 from api.models import User, Product, Sell, SellItem
+from api.utils import validate_stock_availability
 from django.db import transaction
 from django.db.models import Sum, F
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -142,7 +144,11 @@ class SellSerializer(serializers.ModelSerializer):
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
             raise serializers.ValidationError(
-                "Internatl Error to create the sell."
+                INSUFFICIENT_STOCK_MSG.format(
+                    Product_name=sells_data[0]["product"].name,
+                    available=sells_data[0]["product"].stock,
+                    requested=sells_data[0]["quantity"]
+                )
             )
 
     def total(self, obj) -> float:
