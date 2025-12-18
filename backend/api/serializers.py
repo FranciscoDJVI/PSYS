@@ -1,15 +1,15 @@
 """
 Serializers for the e-commerce API.
 """
-
-import logging
+from api.models import User, Product, Sell, SellItem
 from django.db import transaction
 from django.db.models import Sum, F
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from api.models import User, Product, Sell, SellItem
 from .utils import validate_stock_availability, validate_payment_type
 from .exceptions import InsufficientStockError, InvalidPaymentTypeError
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +20,19 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
+        fields = (
+            "username",
+            "is_staff",
+            "password",
+            "is_authenticated",
+            "roles"
+        )
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Product model.
-    """
 
     class Meta:
         model = Product
@@ -78,13 +81,11 @@ class SellItemSerializer(serializers.ModelSerializer):
 
 
 class SellSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Sell model with nested SellItems.
-    """
 
     sell_id = serializers.UUIDField(read_only=True)
     sells = SellItemSerializer(many=True)
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M", read_only=True)
+    created_at = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M", read_only=True)
     total_price = serializers.SerializerMethodField(method_name="total")
     user = serializers.CharField(source="user.username", read_only=True)
 
@@ -103,13 +104,26 @@ class SellSerializer(serializers.ModelSerializer):
         return sell
 
     def _update_stock(self, sells_data):
-        """Decrementa stock de productos usando método bulk del modelo."""
+        """
+        Docstring for _update_stock
+
+        :param self: Description
+        :param sells_data: Description
+        """
+        """Decrease stock of products using model's bulk method."""
+
         Product.bulk_decrease_stock(sells_data)
 
     @transaction.atomic
     def create(self, data):
         """
-        Crea una Sell con validaciones y transacción.
+        Create a sale with validations and transaction.
+        Args:
+            data (dict): Sale data including items.
+        Returns:
+            Sell: Created Sell instance.
+        Raises:
+            serializers.ValidationError: If validation fails.
         """
         try:
             sells_data = data.pop("sells")
@@ -127,7 +141,9 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
-            raise serializers.ValidationError("Error interno al crear la venta.")
+            raise serializers.ValidationError(
+                "Internatl Error to create the sell."
+            )
 
     def total(self, obj) -> float:
         """Calculate total price for the sell.
@@ -138,7 +154,8 @@ class SellSerializer(serializers.ModelSerializer):
         Returns:
             float: Total price."""
         sell_items = (
-            obj.sells.aggregate(total=Sum(F("quantity") * F("product__price")))["total"]
+            obj.sells.aggregate(
+                total=Sum(F("quantity") * F("product__price")))["total"]
             or 0.0
         )
         return sell_items
@@ -178,7 +195,8 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {"username": self.user.username, "email": self.user.email}
+        data["user_data"] = {
+            "username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 
