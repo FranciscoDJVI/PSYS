@@ -1,6 +1,7 @@
 """
 Serializers for the e-commerce API.
 """
+
 from api.constants import INSUFFICIENT_STOCK_MSG, INVALID_PAYMENT_TYPE_MSG
 from api.models import User, Product, Sell, SellItem
 from api.utils import validate_stock_availability
@@ -22,20 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            "username",
-            "is_staff",
-            "password",
-            "is_authenticated",
-            "roles"
-        )
+        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
 
 
 class ProductSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Product
         fields = (
@@ -83,11 +77,9 @@ class SellItemSerializer(serializers.ModelSerializer):
 
 
 class SellSerializer(serializers.ModelSerializer):
-
     sell_id = serializers.UUIDField(read_only=True)
     sells = SellItemSerializer(many=True)
-    created_at = serializers.DateTimeField(
-        format="%Y-%m-%d %H:%M", read_only=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M", read_only=True)
     total_price = serializers.SerializerMethodField(method_name="total")
     user = serializers.CharField(source="user.username", read_only=True)
 
@@ -143,11 +135,12 @@ class SellSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(e))
         except Exception as e:
             logger.error(f"Unexpected error creating sell: {e}")
+            sells_data = data.pop("sells")
             raise serializers.ValidationError(
                 INSUFFICIENT_STOCK_MSG.format(
                     Product_name=sells_data[0]["product"].name,
                     available=sells_data[0]["product"].stock,
-                    requested=sells_data[0]["quantity"]
+                    requested=sells_data[0]["quantity"],
                 )
             )
 
@@ -160,8 +153,7 @@ class SellSerializer(serializers.ModelSerializer):
         Returns:
             float: Total price."""
         sell_items = (
-            obj.sells.aggregate(
-                total=Sum(F("quantity") * F("product__price")))["total"]
+            obj.sells.aggregate(total=Sum(F("quantity") * F("product__price")))["total"]
             or 0.0
         )
         return sell_items
@@ -201,8 +193,7 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user_data"] = {
-            "username": self.user.username, "email": self.user.email}
+        data["user_data"] = {"username": self.user.username, "email": self.user.email}
 
         data["roles"] = [group.name for group in self.user.groups.all()]
 
