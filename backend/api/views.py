@@ -132,17 +132,18 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        user = self.request.user
 
-        if user.groups.filter(name="Admin").exists():
+        if self.request.user.groups.filter(name="Admin").exists():
             return qs
 
-        if user.groups.filter(name="Administrador_tienda").exists():
+        if self.request.user.groups.filter(name="Administrador_tienda").exists():
             vendedor_users = User.objects.filter(groups__name="Vendedor")
-            return qs.filter(user__in=[user] + list(vendedor_users))
+            return qs.filter(user__in=[self.request.user] + list(vendedor_users))
 
-        if user.groups.filter(name="Vendedor").exists():
-            return qs.filter(user=user)
+        if self.request.user.groups.filter(name="Vendedor").exists():
+            return qs.filter(user=self.request.user)
+
+        return qs.none()
 
     def perform_create(self, serializer):
         """
