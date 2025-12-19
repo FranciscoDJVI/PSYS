@@ -99,7 +99,6 @@ class ProductAllAPIView(ProductViewSet):
     """
     ViewSet for all products without pagination.
     """
-
     pagination_class = None
 
 
@@ -118,8 +117,10 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     """
 
     queryset = Sell.objects.prefetch_related("sells__product").annotate(
-        total_price=Sum(F("sells__quantity") * F("sells__product__price"))
-    )
+        total_price=Sum(F("sells__quantity") *
+                        F("sells__product__price"))
+    ).order_by("-created_at")
+
     serializer_class = SellSerializer
 
     filterset_class = SellFilter
@@ -130,9 +131,17 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.request.user.is_authenticated:
-            qs = qs.filter(user=self.request.user)
-        return qs
+        user = self.request.user
+
+        if user.groups.filter(name="Admin").exists():
+            return qs
+
+        if user.groups.filter(name="Administrador_tienda").exists():
+            vendedor_users = User.objects.filter(groups__name="Vendedor")
+            return qs.filter(user__in=[user] + list(vendedor_users))
+
+        if user.groups.filter(name="Vendedor").exists():
+            return qs.filter(user=user)
 
     def perform_create(self, serializer):
         """
