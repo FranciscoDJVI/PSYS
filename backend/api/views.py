@@ -2,7 +2,6 @@
 Views for the e-commerce API.
 """
 
-
 from api.exceptions import ProductNotFoundError
 from api.models import Product, SellItem, Sell, User
 from api.serializers import (
@@ -99,6 +98,7 @@ class ProductAllAPIView(ProductViewSet):
     """
     ViewSet for all products without pagination.
     """
+
     pagination_class = None
 
 
@@ -116,10 +116,11 @@ class SellViewSet(viewsets.ModelViewSet, mixins.AuthenticatedUserMixin):
     ViewSet for Sell model with custom permissions and total sales.
     """
 
-    queryset = Sell.objects.prefetch_related("sells__product").annotate(
-        total_price=Sum(F("sells__quantity") *
-                        F("sells__product__price"))
-    ).order_by("-created_at")
+    queryset = (
+        Sell.objects.prefetch_related("sells__product")
+        .annotate(total_price=Sum(F("sells__quantity") * F("sells__product__price")))
+        .order_by("-created_at")
+    )
 
     serializer_class = SellSerializer
 
