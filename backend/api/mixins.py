@@ -1,4 +1,5 @@
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from api.constants import REQUEST_ACTION
 
 
 class PermissionMixin:
@@ -8,7 +9,7 @@ class PermissionMixin:
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
-        if self.action in ["create", "update", "partial_update", "destroy"]:
+        if self.action in REQUEST_ACTION:
             self.permission_classes = [IsAdminUser, IsAuthenticated]
         return super().get_permissions()
 

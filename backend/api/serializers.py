@@ -26,15 +26,27 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "username",
+            "email",
             "is_staff",
             "password",
             "is_authenticated",
             "roles",
             "groups",
         )
+        extra_kwargs = {"password": {"write_only" " True"}}
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
+
+    def create(self, validated_data):
+        groups_data = validated_data.pop("groups", [])
+
+        user = User.objects.create_user(**validated_data)
+
+        if groups_data:
+            user.groups.set(groups_data)
+
+        return user
 
 
 class ProductSerializer(serializers.ModelSerializer):
