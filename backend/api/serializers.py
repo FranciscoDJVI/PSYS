@@ -5,6 +5,7 @@ Serializers for the e-commerce API.
 from api.constants import INSUFFICIENT_STOCK_MSG, INVALID_PAYMENT_TYPE_MSG
 from api.models import User, Product, Sell, SellItem
 from api.utils import validate_stock_availability
+from django.contrib.auth.models import Group
 from django.db import transaction
 from django.db.models import Sum, F
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -23,7 +24,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "is_staff", "password", "is_authenticated", "roles")
+        fields = (
+            "username",
+            "is_staff",
+            "password",
+            "is_authenticated",
+            "roles",
+            "groups",
+        )
 
     def get_roles(self, obj):
         return [group.name for group in obj.groups.all()]
