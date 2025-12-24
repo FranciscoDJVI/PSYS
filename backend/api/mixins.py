@@ -1,5 +1,4 @@
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
-from api.constants import REQUEST_ACTION
 
 
 class PermissionMixin:
@@ -9,18 +8,8 @@ class PermissionMixin:
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
-        if self.action in REQUEST_ACTION:
+        if self.request.method == "POST, PUT, PATCH, DELETE":
             self.permission_classes = [IsAdminUser, IsAuthenticated]
-        return super().get_permissions()
-
-
-class AdminOnlyMixin:
-    """
-    Mixin to restrict access to admin users only.
-    """
-
-    def get_permissions(self):
-        self.permission_classes = [IsAdminUser, IsAuthenticated]
         return super().get_permissions()
 
 
