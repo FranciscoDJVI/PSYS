@@ -49,7 +49,7 @@ class UserViewSet(viewsets.ModelViewSet, mixins.PermissionMixin):
                 {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
             )
 
-        return super().create(request, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         if not self.request.user.groups.filter(
